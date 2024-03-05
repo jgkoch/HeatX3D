@@ -894,7 +894,15 @@ string opencl_c_container() { return R( // ########################## begin of O
 }
 )+R(float c(const uint i) { // avoid constant keyword by encapsulating data in function which gets inlined by compiler
 	const float c[3u*def_velocity_set] = {
-)+"#if defined(D2Q9)"+R(
+)+"#if defined(D2Q4)"+R(
+		1,-1, 0, 0,// x
+		0, 0, 1,-1,// y
+		0, 0, 0, 0,// z
+)+"#elif defined(D2Q5)"+R(
+		0, 1,-1, 0, 0, // x
+		0, 0, 0, 1,-1, // y
+		0, 0, 0, 0, 0, // z
+)+"#elif defined(D2Q9)"+R(
 		0, 1,-1, 0, 0, 1,-1, 1,-1, // x
 		0, 0, 0, 1,-1, 1,-1,-1, 1, // y
 		0, 0, 0, 0, 0, 0, 0, 0, 0  // z
@@ -916,7 +924,11 @@ string opencl_c_container() { return R( // ########################## begin of O
 }
 )+R(float w(const uint i) { // avoid constant keyword by encapsulating data in function which gets inlined by compiler
 	const float w[def_velocity_set] = { def_w0, // velocity set weights
-)+"#if defined(D2Q9)"+R(
+)+"#if defined(D2Q4)"+R(
+		def_ws, def_ws, def_ws, def_ws
+)+"#elif defined(D2Q5)"+R(
+		def_ws, def_ws, def_ws, def_ws
+)+"#elif defined(D2Q9)"+R(
 		def_ws, def_ws, def_ws, def_ws, def_we, def_we, def_we, def_we
 )+"#elif defined(D3Q15)"+R(
 		def_ws, def_ws, def_ws, def_ws, def_ws, def_ws,
@@ -948,7 +960,13 @@ string opencl_c_container() { return R( // ########################## begin of O
 	uint x0, xp, xm, y0, yp, ym, z0, zp, zm;
 	calculate_indices(n, &x0, &xp, &xm, &y0, &yp, &ym, &z0, &zp, &zm);
 	j[0] = n;
-)+"#if defined(D2Q9)"+R(
+)+"#if defined(D2Q4)"+R(
+	j[ 0] = xp+y0; j[ 1] = xm+y0; // +00 -00
+	j[ 2] = x0+yp; j[ 3] = x0+ym; // 0+0 0-0
+)+"#elif defined(D2Q5)"+R(
+	j[ 1] = xp+y0; j[ 2] = xm+y0; // +00 -00
+	j[ 3] = x0+yp; j[ 4] = x0+ym; // 0+0 0-0
+)+"#elif defined(D2Q9)"+R(
 	j[ 1] = xp+y0; j[ 2] = xm+y0; // +00 -00
 	j[ 3] = x0+yp; j[ 4] = x0+ym; // 0+0 0-0
 	j[ 5] = xp+yp; j[ 6] = xm+ym; // ++0 --0
@@ -1038,7 +1056,18 @@ string opencl_c_container() { return R( // ########################## begin of O
 	uy *= 3.0f;
 	uz *= 3.0f;
 	feq[ 0] = def_w0*fma(rho, 0.5f*c3, rhom1); // 000 (identical for all velocity sets)
-)+"#if defined(D2Q9)"+R(
+
+)+"#if defined(D2Q4)"+R(
+	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
+	const float rhos=def_ws*rho;
+	feq[ 0] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhos); feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhos); // +00 -00
+	feq[ 2] = fma(rhos, fma(0.5f, fma(uy, uy, c3), uy), rhos); feq[ 3] = fma(rhos, fma(0.5f, fma(uy, uy, c3), -uy), rhos); // 0+0 0-0
+)+"#elif defined(D2Q5)"+R(
+	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
+	const float rhos=def_ws*rho;
+	feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhos); feq[ 2] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhos); // +00 -00
+	feq[ 3] = fma(rhos, fma(0.5f, fma(uy, uy, c3), uy), rhos); feq[ 4] = fma(rhos, fma(0.5f, fma(uy, uy, c3), -uy), rhos); // 0+0 0-0
+)+"#elif defined(D2Q9)"+R(
 	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho, rhoe=def_we*rho, rhom1s=def_ws*rhom1, rhom1e=def_we*rhom1;
 	feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhom1s); feq[ 2] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhom1s); // +00 -00
@@ -1090,7 +1119,15 @@ string opencl_c_container() { return R( // ########################## begin of O
 	float rho=f[0], ux, uy, uz;
 	for(uint i=1u; i<def_velocity_set; i++) rho += f[i]; // calculate density from fi
 	rho += 1.0f; // add 1.0f last to avoid digit extinction effects when summing up fi (perturbation method / DDF-shifting)
-)+"#if defined(D2Q9)"+R(
+)+"#if defined(D2Q4)"+R(
+	ux = f[0]-f[1]; // calculate velocity from fi (alternating + and - for best accuracy)
+	uy = f[2]-f[3];
+	uz = 0.0f;
+)+"#elif defined(D2Q5)"+R(
+	ux = f[1]-f[2]; // calculate velocity from fi (alternating + and - for best accuracy)
+	uy = f[3]-f[4];
+	uz = 0.0f;
+)+"#elif defined(D2Q9)"+R(
 	ux = f[1]-f[2]+f[5]-f[6]+f[7]-f[8]; // calculate velocity from fi (alternating + and - for best accuracy)
 	uy = f[3]-f[4]+f[5]-f[6]+f[8]-f[7];
 	uz = 0.0f;
@@ -2027,7 +2064,17 @@ string opencl_c_container() { return R( // ########################## begin of O
 
 )+R(uint index_transfer(const uint side_i) {
 	const uchar index_transfer_data[2u*def_dimensions*def_transfers] = {
-)+"#if defined(D2Q9)"+R(
+)+"#if defined(D2Q4)"+R(
+		0, // xp
+		1, // xm
+		2, // yp
+		3, // ym
+)+"#elif defined(D2Q5)"+R(
+		1, // xp
+		2, // xm
+		3, // yp
+		4, // ym
+)+"#elif defined(D2Q9)"+R(
 		1,  5,  7, // xp
 		2,  6,  8, // xm
 		3,  5,  8, // yp

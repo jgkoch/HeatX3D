@@ -3,8 +3,15 @@
 
 
 Units units; // for unit conversion
-
-#if defined(D2Q9)
+#if defined(D2Q4)
+const uint velocity_set = 4u;
+const uint dimensions = 2u;
+const uint transfers = 2u;
+#elif defined(D2Q5)
+const uint velocity_set = 5u;
+const uint dimensions = 2u;
+const uint transfers = 2u;
+#elif defined(D2Q9)
 const uint velocity_set = 9u;
 const uint dimensions = 2u;
 const uint transfers = 3u;
@@ -314,7 +321,13 @@ string LBM_Domain::device_defines() const { return
 
 	"\n	#define def_c 0.57735027f" // lattice speed of sound c = 1/sqrt(3)*dt
 	"\n	#define def_w " +to_string(1.0f/get_tau())+"f" // relaxation rate w = dt/tau = dt/(nu/c^2+dt/2) = 1/(3*nu+1/2)
-#if defined(D2Q9)
+#if defined(D2Q4)
+	"\n	#define def_w0 (1.0f/2.25f)" // center (0)
+	"\n	#define def_ws (1.0f/9.0f)" // straight (1-4)
+#elif defined(D2Q5)
+	"\n	#define def_w0 (1.0f/2.25f)" // center (0)
+	"\n	#define def_ws (1.0f/9.0f)" // straight (1-4)
+#elif defined(D2Q9)
 	"\n	#define def_w0 (1.0f/2.25f)" // center (0)
 	"\n	#define def_ws (1.0f/9.0f)" // straight (1-4)
 	"\n	#define def_we (1.0f/36.0f)" // edge (5-8)
