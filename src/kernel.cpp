@@ -1068,13 +1068,14 @@ string opencl_c_container() { return R( // ########################## begin of O
 )+"#if defined(D2Q4)"+R(
 	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho;
-	feq[ 0] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhos); feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhos); // +00 -00
-	feq[ 2] = fma(rhos, fma(0.5f, fma(uy, uy, c3), uy), rhos); feq[ 3] = fma(rhos, fma(0.5f, fma(uy, uy, c3), -uy), rhos); // 0+0 0-0
+	feq[ 0] = rhos; feq[ 1] = rhos; // +00 -00
+	feq[ 2] = rhos; feq[ 3] = rhos; // 0+0 0-0
 )+"#elif defined(D2Q5)"+R(
 	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho;
-	feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhos); feq[ 2] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhos); // +00 -00
-	feq[ 3] = fma(rhos, fma(0.5f, fma(uy, uy, c3), uy), rhos); feq[ 4] = fma(rhos, fma(0.5f, fma(uy, uy, c3), -uy), rhos); // 0+0 0-0
+	feq[ 0] =  def_w0*rho;
+	feq[ 1] = rhos; feq[ 2] = rhos; // +00 -00
+	feq[ 3] = rhos; feq[ 4] = rhos; // 0+0 0-0
 )+"#elif defined(D2Q9)"+R(
 	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho, rhoe=def_we*rho, rhom1s=def_ws*rhom1, rhom1e=def_we*rhom1;

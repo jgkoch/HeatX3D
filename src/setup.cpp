@@ -71,9 +71,10 @@ void main_setup() { // 2D Taylor-Green vortices (use D2Q9); required extensions 
 		const float fy = (float)y+0.5f-0.5f*(float)Ny;
 		lbm.u.x[n] =  A*cosf(2.0f*pif*fx/a)*sinf(2.0f*pif*fy/b);
 		lbm.u.y[n] = -A*sinf(2.0f*pif*fx/a)*cosf(2.0f*pif*fy/b);
-		lbm.rho[n] = 1.0f-sq(A)*3.0f/4.0f*(cosf(4.0f*pif*fx/a)+cosf(4.0f*pif*fy/b));
+		lbm.rho[n] = 1.0f;//-sq(A)*3.0f/4.0f*(cosf(4.0f*pif*fx/a)+cosf(4.0f*pif*fy/b));
 	}); // ####################################################################### run simulation, export images and data ##########################################################################
 	lbm.run(1000u);
+        lbm.rho.write_device_to_vtk();
 } /**/
 
 #endif // BENCHMARK
