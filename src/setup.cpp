@@ -57,7 +57,29 @@
 	//lbm.run(1000u); lbm.u.read_from_device(); println(lbm.u.x[lbm.index(Nx/2u, Ny/2u, Nz/2u)]); wait(); // test for binary identity
 } /**/
 
+void main_setup() { // Pulse; required extensions in defines.hpp: INTERACTIVE_GRAPHICS
+	// ################################################################## define simulation box size, viscosity and volume force ###################################################################
+	LBM lbm(1024u, 1024u, 1u, 0.02f);
+	const float R = 32.0f; // sphere radius
+	// ###################################################################################### define geometry ######################################################################################
+	const uint Nx=lbm.get_Nx(), Ny=lbm.get_Ny(), Nz=lbm.get_Nz(); parallel_for(lbm.get_N(), [&](ulong n) { uint x=0u, y=0u, z=0u; lbm.coordinates(n, x, y, z);
+		lbm.rho[n] = 1.0f;
+		if(sphere(x, y, z, lbm.center(), R)) {
+			lbm.rho[n] = 1.2f;
+		} else {
+			lbm.rho[n] = 1.0f;
+		}
+		//if(y==0u||y==Ny-1u) lbm.flags[n] = TYPE_S; 
+		//if(y==0u) lbm.rho[n] = 0.0f;
+		//if(y==Ny-1u) lbm.rho[n] = 1.0f;
+	}); // ####################################################################### run simulation, export images and data ##########################################################################
+	lbm.run(10000u);
+        lbm.rho.write_device_to_vtk();
+} /**/
 
+#endif // BENCHMARK
+
+/*
 
 void main_setup() { // 2D Taylor-Green vortices (use D2Q9); required extensions in defines.hpp: INTERACTIVE_GRAPHICS
 	// ################################################################## define simulation box size, viscosity and volume force ###################################################################
@@ -76,8 +98,6 @@ void main_setup() { // 2D Taylor-Green vortices (use D2Q9); required extensions 
 	lbm.run(25000u);
         //lbm.rho.write_device_to_vtk();
 } /**/
-
-#endif // BENCHMARK
 
 
 /*void main_setup() { // Poiseuille flow validation; required extensions in defines.hpp: VOLUME_FORCE

@@ -1063,26 +1063,22 @@ string opencl_c_container() { return R( // ########################## begin of O
 	ux *= 3.0f;
 	uy *= 3.0f;
 	uz *= 3.0f;
-	feq[ 0] = def_w0*fma(rho, 0.5f*c3, rhom1); // 000 (identical for all velocity sets)
+	feq[ 0] =  def_w0*rho;
 
 )+"#if defined(D2Q4)"+R(
-	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho;
 	feq[ 0] = rhos; feq[ 1] = rhos; // +00 -00
 	feq[ 2] = rhos; feq[ 3] = rhos; // 0+0 0-0
 )+"#elif defined(D2Q5)"+R(
-	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
 	const float rhos=def_ws*rho;
-	feq[ 0] =  def_w0*rho;
 	feq[ 1] = rhos; feq[ 2] = rhos; // +00 -00
 	feq[ 3] = rhos; feq[ 4] = rhos; // 0+0 0-0
 )+"#elif defined(D2Q9)"+R(
-	const float u0=ux+uy, u1=ux-uy; // these pre-calculations make manual unrolling require less FLOPs
-	const float rhos=def_ws*rho, rhoe=def_we*rho, rhom1s=def_ws*rhom1, rhom1e=def_we*rhom1;
-	feq[ 1] = fma(rhos, fma(0.5f, fma(ux, ux, c3), ux), rhom1s); feq[ 2] = fma(rhos, fma(0.5f, fma(ux, ux, c3), -ux), rhom1s); // +00 -00
-	feq[ 3] = fma(rhos, fma(0.5f, fma(uy, uy, c3), uy), rhom1s); feq[ 4] = fma(rhos, fma(0.5f, fma(uy, uy, c3), -uy), rhom1s); // 0+0 0-0
-	feq[ 5] = fma(rhoe, fma(0.5f, fma(u0, u0, c3), u0), rhom1e); feq[ 6] = fma(rhoe, fma(0.5f, fma(u0, u0, c3), -u0), rhom1e); // ++0 --0
-	feq[ 7] = fma(rhoe, fma(0.5f, fma(u1, u1, c3), u1), rhom1e); feq[ 8] = fma(rhoe, fma(0.5f, fma(u1, u1, c3), -u1), rhom1e); // +-0 -+0
+	const float rhos=def_ws*rho, rhoe=def_we*rho;
+	feq[ 1] = rhos; feq[ 2] = rhos; // +00 -00
+	feq[ 3] = rhos; feq[ 4] = rhos; // 0+0 0-0
+	feq[ 5] = rhoe; feq[ 6] = rhoe; // ++0 --0
+	feq[ 7] = rhoe; feq[ 8] = rhoe; // +-0 -+0
 )+"#elif defined(D3Q15)"+R(
 	const float u0=ux+uy+uz, u1=ux+uy-uz, u2=ux-uy+uz, u3=-ux+uy+uz;
 	const float rhos=def_ws*rho, rhoc=def_wc*rho, rhom1s=def_ws*rhom1, rhom1c=def_wc*rhom1;
@@ -1127,7 +1123,7 @@ string opencl_c_container() { return R( // ########################## begin of O
 )+R(void calculate_rho_u(const float* f, float* rhon, float* uxn, float* uyn, float* uzn) { // calculate density and velocity fields from fi
 	float rho=f[0], ux, uy, uz;
 	for(uint i=1u; i<def_velocity_set; i++) rho += f[i]; // calculate density from fi
-	rho += 1.0f; // add 1.0f last to avoid digit extinction effects when summing up fi (perturbation method / DDF-shifting)
+	//rho += 1.0f; // add 1.0f last to avoid digit extinction effects when summing up fi (perturbation method / DDF-shifting)
 )+"#if defined(D2Q4)"+R(
 	ux = f[0]-f[1]; // calculate velocity from fi (alternating + and - for best accuracy)
 	uy = f[2]-f[3];
