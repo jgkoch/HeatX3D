@@ -2,7 +2,6 @@
 
 
 
-#ifdef BENCHMARK
 #include "info.hpp"
 /*void main_setup() { // benchmark; required extensions in defines.hpp: BENCHMARK, optionally FP16S or FP16C
 	// ################################################################## define simulation box size, viscosity and volume force ###################################################################
@@ -69,15 +68,12 @@ void main_setup() { // Pulse; required extensions in defines.hpp: INTERACTIVE_GR
 		} else {
 			lbm.rho[n] = 1.0f;
 		}
-		//if(y==0u||y==Ny-1u) lbm.flags[n] = TYPE_S; 
-		//if(y==0u) lbm.rho[n] = 0.0f;
-		//if(y==Ny-1u) lbm.rho[n] = 1.0f;
+		if(x==0u || x==Nx-1u || y==0u||y==Ny-1u) lbm.flags[n] = TYPE_E; 
 	}); // ####################################################################### run simulation, export images and data ##########################################################################
-	lbm.run(10000u);
+	lbm.run(100000u);
         lbm.rho.write_device_to_vtk();
 } /**/
 
-#endif // BENCHMARK
 
 /*
 
